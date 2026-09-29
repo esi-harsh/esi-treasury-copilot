@@ -3,7 +3,7 @@ import uuid
 import httpx
 from datetime import date, timedelta
 from sqlalchemy.orm import Session
-from app.core.config import OPENROUTER_API_KEY, LLM_MODEL
+from app.core.config import OPENROUTER_API_KEY, LLM_MODEL, MAX_TOKENS
 from app.models import Deal, Counterparty, Cashflow, CopilotConversation, Currency
 from app.services.deal_service import create_deal_with_cashflows
 from app.services.position_service import recalculate_positions
@@ -109,8 +109,17 @@ def _execute_tool(db: Session, name: str, args: dict) -> str:
 
 
 def _call_llm(messages: list, tools=None) -> dict:
-    headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}", "Content-Type": "application/json"}
-    body = {"model": LLM_MODEL, "messages": messages}
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:8000",
+        "X-Title": "ESI Treasury Copilot",
+    }
+    body = {
+        "model": LLM_MODEL,
+        "messages": messages,
+        "max_tokens": MAX_TOKENS,
+    }
     if tools:
         body["tools"] = tools
     resp = httpx.post(OPENROUTER_URL, json=body, headers=headers, timeout=60)
@@ -141,7 +150,8 @@ def chat(db: Session, message: str, session_id: str | None = None) -> tuple[str,
         response_msg = _call_llm(_sessions[session_id], tools=TOOLS)
         _sessions[session_id].append(response_msg)
 
-    reply = response_msg.get("content", "")
+    reply = response_msg.get("content", "") or ""
     db.add(CopilotConversation(session_id=session_id, role="assistant", content=reply))
     db.commit()
     return reply, session_id
+
