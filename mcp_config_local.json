@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "ESI Treasury MCP Configuration",
+  "version": "2.0.0",
+  "configurations": {
+    "claude_desktop_and_antigravity_stdio": {
+      "mcpServers": {
+        "esi-treasury": {
+          "command": "python",
+          "args": [
+            "C:/ESI Treasury/server/mcp_stdio.py"
+          ],
+          "env": {
+            "DATABASE_URL": "sqlite:///C:/ESI Treasury/server/treasury.db"
+          }
+        }
+      }
+    },
+    "http_remote_and_web_clients": {
+      "mcpServers": {
+        "esi-treasury-http": {
+          "url": "http://localhost:8000/api/v1/mcp",
+          "transport": "http-jsonrpc"
+        },
+        "esi-treasury-sse": {
+          "url": "http://localhost:8000/api/v1/mcp/sse",
+          "transport": "sse"
+        }
+      }
+    }
+  }
+}
