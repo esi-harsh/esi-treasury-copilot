@@ -1,9 +1,19 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine, Base
 from app.models import *  # noqa: F401,F403
 from app.api import counterparties, currencies, bank_accounts, deals, positions, limits, market_rates, valuation, copilot
+from app.mcp import mcp_router
 
-app = FastAPI(title="Treasury Management System", version="2.0.0", description="AI-powered Treasury Management System inspired by Kondor/Acumen Plus — 14 table schema")
+app = FastAPI(title="Treasury Management System", version="2.0.0", description="AI-powered Treasury Management System inspired by Kondor/Acumen Plus — 14 table schema with MCP Support")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
@@ -25,3 +35,5 @@ app.include_router(limits.router, prefix="/api/v1", tags=["Limits & Risk"])
 app.include_router(market_rates.router, prefix="/api/v1", tags=["Market Data"])
 app.include_router(valuation.router, prefix="/api/v1", tags=["Valuation"])
 app.include_router(copilot.router, prefix="/api/v1", tags=["AI Copilot"])
+app.include_router(mcp_router)
+
